@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import logo from "../assets/logo/logo-laurs.png";
 
 function Register() {
   const [name, setName] = useState("");
@@ -47,13 +48,21 @@ function Register() {
       {/* Card */}
       <div className="w-full max-w-md bg-white/40 backdrop-blur-2xl border border-white/30 shadow-2xl rounded-3xl p-10 relative z-10">
 
-        <h1 className="text-4xl font-bold text-center mb-3">
-          Criar conta
-        </h1>
+        <div className="flex justify-center mb-8">
+        <img
+          src={logo}
+          alt="Laurs"
+          className="h-16 w-auto"
+        />
+      </div>
 
-        <p className="text-gray-500 text-center mb-10">
-          Comece sua loja no Laurs
-        </p>
+      <h1 className="text-4xl font-bold text-center mb-3">
+        Criar conta
+      </h1>
+
+      <p className="text-gray-500 text-center mb-10">
+        Comece sua loja na Laurs
+      </p>
 
         <form className="flex flex-col gap-5">
 
@@ -84,7 +93,7 @@ function Register() {
           <button
             type="button"
             onClick={handleRegister}
-            className="bg-gradient-to-r from-cyan-400 to-blue-600 text-white py-4 rounded-2xl font-semibold hover:scale-105 hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] transition duration-300"
+            className="bg-gradient-to-r from-cyan-400 to-blue-600 text-white py-4 rounded-2xl font-semibold hover:scale-102 hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] transition duration-300"
           >
             Criar conta
           </button>

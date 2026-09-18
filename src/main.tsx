@@ -5,13 +5,19 @@ import { AuthProvider } from "./context/AuthContext";
 
 import "./index.css";
 import App from "./App.tsx";
+import "@fontsource/outfit/400.css";
+
+import { ThemeProvider } from "styled-components";
+import { theme } from "./theme";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <AuthProvider>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-    </AuthProvider>
+    <ThemeProvider theme={theme}>
+      <AuthProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   </StrictMode>
 );

@@ -8,7 +8,7 @@ function Footer() {
           <h2 className="text-2xl font-bold">Laurs</h2>
 
           <p className="text-gray-500 mt-2">
-          © 2026 Laurs. Todos os direitos reservados.
+          © 2026 LaurS. Todos os direitos reservados.
           </p>
         </div>
 
