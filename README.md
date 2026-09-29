@@ -325,8 +325,8 @@ Um dos principais desafios foi integrar todas essas partes de forma consistente,
 
 ### 💻 Repositórios (em produção )
 
-* **Frontend:** [Laurs Frontend](URL_DO_REPOSITORIO_FRONTEND)
-* **Backend:** [Laurs Backend](URL_DO_REPOSITORIO_BACKEND)
+* **Frontend:** [Laurs Frontend](https://github.com/DaniLaurs/Laurs-frontend)
+* **Backend:** [Laurs Backend](https://github.com/DaniLaurs/Laurs-backend)
 
 ### 🚀 Aplicação
 
