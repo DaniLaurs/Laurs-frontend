@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useCart } from "../context/useCart";
 import PageHeader from "../components/ui/PageHeader";
 import { PRODUCT_CATEGORIES } from "../constants/productCategories";
 import Input from "../components/ui/Input";
@@ -28,6 +29,7 @@ interface Product {
   description?: string;
   category?: string;
   price: number;
+  storeId: string;
   images: ProductImage[];
   variants: ProductVariant[];
 }
@@ -47,9 +49,16 @@ export default function Products() {
      STATES
   ======================= */
 
+  const { addToCart } = useCart();
+
   const [products, setProducts] = useState<Product[]>([]);
 
   const [search, setSearch] = useState("");
+  const [selectedVariants, setSelectedVariants] = useState<
+  Record<string, string>
+>({});
+
+  const [addedProducts, setAddedProducts] = useState<Record<string, boolean>>({});
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -197,6 +206,51 @@ async function fetchProducts(searchTerm = "") {
   /* =======================
      DELETE PRODUCT
   ======================= */
+
+  function handleAddToCart(product: Product) {
+  const selectedVariantId = selectedVariants[product.id];
+
+const variant = product.variants.find(
+  (item) => item.id === selectedVariantId
+);
+
+const cartKey = `${product.id}-${selectedVariantId || "default"}`;
+
+console.log("BOTÃO:", cartKey, addedProducts[cartKey])
+
+if (product.variants.length > 0 && !variant) {
+  alert("Selecione uma variante antes de adicionar ao carrinho.");
+  return;
+}
+
+  addToCart({
+    id: product.id,
+    storeId: product.storeId,
+    name: product.name,
+    price: product.price,
+    image: product.images[0]?.imageUrl,
+    quantity: 1,
+    variant: variant
+      ? {
+          id: variant.id,
+          color: variant.color,
+          size: variant.size,
+        }
+      : undefined,
+  });
+
+  console.log("CART KEY:", cartKey);
+console.log("VARIANTE SELECIONADA:", selectedVariantId);
+
+
+setAddedProducts((current) => ({
+  ...current,
+  [cartKey]: true,
+}));
+}
+
+
+
 
   async function handleDeleteProduct(id: string) {
     try {
@@ -593,7 +647,13 @@ async function fetchProducts(searchTerm = "") {
       Nenhum produto encontrado.
       </div>
   ) : (
-   products.map((product) => (
+   products.map((product) => {
+      const selectedVariantId = selectedVariants[product.id];
+
+      const cartKey = `${product.id}-${selectedVariantId || "default"}`;
+
+      return (
+
       <div
         key={product.id}
         className="bg-surface rounded-2xl shadow-sm border border-border overflow-hidden"
@@ -639,27 +699,45 @@ async function fetchProducts(searchTerm = "") {
      <div className="mt-4 border-t border-border pt-4">
              <p className="font-semibold mb-2 text-text">
                 Variantes
-              </p>
-
+                          </p>
             {product.variants.length === 0 ? (
-              <p className="text-textLight text-sm">
-                  Nenhuma variante
-                </p>
+              <p className="text-sm text-textLight">
+                Nenhuma variante
+              </p>
             ) : (
-              product.variants.map((variant) => (
-                <div
-                  key={variant.id}
-                  className="flex justify-between text-sm py-1"
-                >
-                  <span>
-                    {variant.color} • {variant.size}
-                  </span>
+              <div className="space-y-2">
+                {product.variants.map((variant) => (
+                  <button
+                    key={variant.id}
+                    type="button"
+                    disabled={variant.stock <= 0}
+                    onClick={() =>
+                      setSelectedVariants((current) => ({
+                        ...current,
+                        [product.id]: variant.id,
+                      }))
+                    }
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl border text-sm transition ${
+                      selectedVariants[product.id] === variant.id
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-surface text-text"
+                    } ${
+                      variant.stock <= 0
+                        ? "opacity-50 cursor-not-allowed"
+                        : "hover:border-primary"
+                    }`}
+                  >
+                    <span>
+                      {variant.color || "Sem cor"}
+                      {variant.size && ` • ${variant.size}`}
+                    </span>
 
-                  <span className="text-textLight">
-                    Estoque: {variant.stock}
-                  </span>
-                </div>
-              ))
+                    <span>
+                      Estoque: {variant.stock}
+                    </span>
+                  </button>
+                ))}
+              </div>
             )}
 
           </div>
@@ -696,14 +774,28 @@ async function fetchProducts(searchTerm = "") {
             </Button>
 
           </div>
+                  <Button
+          onClick={() => handleAddToCart(product)}
+          disabled={!!addedProducts[cartKey]}
+          className={`w-full mt-2 ${
+            addedProducts[cartKey]
+              ? "!bg-green-500 !hover:bg-green-500 cursor-default"
+              : ""
+          }`}
+        >
+              {addedProducts[cartKey]
+          ? "✓ Adicionado ao carrinho"
+          : "Adicionar ao carrinho"}
+        </Button>
 
         </div>
       </div>
-    ))
-  )}
+    );
+  })
+)}
 </div>
 
-    </main>
-  </div>
+</main>
+</div>
 );
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import { useSearchParams } from "react-router-dom";
 import ProductCard from "../components/Products/ProductCard";
 import PageHeader from "../components/ui/PageHeader";
@@ -19,6 +20,8 @@ interface Product {
 
 export default function Search() {
 
+  const { token } = useAuth();
+
     console.log("SEARCH PAGE CARREGOU");
 
   const [searchParams] = useSearchParams();
@@ -35,8 +38,7 @@ export default function Search() {
     async function searchProducts() {
 
         
-
-      if (!query) {
+if (!query || !token) {
         setProducts([]);
         setLoading(false);
         return;
@@ -45,8 +47,13 @@ export default function Search() {
 
       try {
 
-        const response = await fetch(
-          `http://localhost:3333/products/search?search=${encodeURIComponent(query)}`
+       const response = await fetch(
+          `http://localhost:3333/products?search=${encodeURIComponent(query)}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
 
 
@@ -54,8 +61,7 @@ export default function Search() {
 
         console.log("PRODUTOS SEARCH:", data);
 
-        setProducts(data);
-
+setProducts(Array.isArray(data) ? data : []);
 
       } catch (error) {
 
@@ -73,7 +79,7 @@ export default function Search() {
 
     searchProducts();
 
-  }, [query]);
+  }, [query, token]);
 
 
   if (loading) {
@@ -138,21 +144,17 @@ export default function Search() {
                 mt-8
             "
             >
-
-            {products.map((product) => (
-
-                <ProductCard
-                key={product.id}
-                id={product.id}
-                storeId={product.storeId}
-                name={product.name}
-                price={product.price}
-                category={product.category ?? ""}
-                image={product.images?.[0]}
-                />
-
-            ))}
-
+{products.map((product) => (
+  <ProductCard
+    key={product.id}
+    id={product.id}
+    storeId={product.storeId}
+    name={product.name}
+    price={product.price}
+    category={product.category ?? ""}
+    image={product.images?.[0]}
+  />
+))}
             </div>
           
       )}

@@ -69,13 +69,19 @@ const totalItems = cartItems.reduce(
               placeholder="Buscar produtos..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => {
-              if (e.key === "Enter" && search.trim()) {
-                navigate(
-                  `/search?q=${encodeURIComponent(search)}`
-                );
-              }
-                }}
+           onKeyDown={(e) => {
+  console.log("TECLA:", e.key);
+  console.log("BUSCA:", search);
+
+  if (e.key === "Enter" && search.trim()) {
+    console.log("VAI NAVEGAR PARA SEARCH");
+
+    navigate(
+      `/search?q=${encodeURIComponent(search)}`
+    );
+  }
+}}
+                
                 className="
                   bg-transparent
                   outline-none

@@ -5,7 +5,10 @@ import {
   Menu,
 } from "lucide-react";
 
+
 import { useAuth } from "../../context/AuthContext";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 
 interface DashboardHeaderProps {
@@ -18,6 +21,8 @@ function DashboardHeader({
 }: DashboardHeaderProps) {
 
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [search, setSearch] = useState("");
 
 
   return (
@@ -67,16 +72,25 @@ function DashboardHeader({
           size={20}
           className="text-gray-400"
         />
-
-        <input
-          type="text"
-          placeholder="Buscar produtos..."
-          className="
-            bg-transparent
-            outline-none
-            w-full
-          "
-        />
+      
+            <input
+        type="text"
+        placeholder="Buscar produtos..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && search.trim()) {
+            navigate(
+              `/search?q=${encodeURIComponent(search)}`
+            );
+          }
+        }}
+        className="
+          bg-transparent
+          outline-none
+          w-full
+        "
+      />
 
       </div>
 

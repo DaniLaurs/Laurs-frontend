@@ -131,6 +131,51 @@ const filteredOrders =
     }
   }
 
+  async function handleUpdateStatus(
+  orderId: string,
+  status: string
+) {
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(
+      `http://localhost:3333/orders/${orderId}/status`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          status,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Erro ao atualizar status");
+    }
+
+    const updatedOrder = await response.json();
+
+    console.log("STATUS ATUALIZADO:", updatedOrder);
+
+    setOrders((currentOrders) =>
+      currentOrders.map((order) =>
+        order.id === orderId
+          ? {
+              ...order,
+              status: updatedOrder.status,
+            }
+          : order
+      )
+    );
+  } catch (error) {
+    console.log("ERRO AO ATUALIZAR STATUS:", error);
+    alert("Não foi possível atualizar o status do pedido.");
+  }
+}
+
   function getStatusLabel(status?: string) {
     switch (status) {
       case "PENDING":
@@ -138,6 +183,9 @@ const filteredOrders =
 
       case "PROCESSING":
         return "Processando";
+
+      case "SHIPPED":
+        return "Enviado";
 
       case "COMPLETED":
         return "Concluído";
@@ -158,6 +206,9 @@ const filteredOrders =
       case "PROCESSING":
         return "bg-primary/10 text-primary";
 
+      case "SHIPPED":
+        return "bg-purple-100 text-purple-700";
+
       case "COMPLETED":
         return "bg-success/10 text-success";
 
@@ -168,6 +219,21 @@ const filteredOrders =
         return "bg-warning/10 text-warning";
     }
   }
+
+  function getStatusStep(status?: string) {
+  switch (status) {
+    case "PENDING":
+      return 1;
+    case "PROCESSING":
+      return 2;
+    case "SHIPPED":
+      return 3;
+    case "COMPLETED":
+      return 4;
+    default:
+      return 0;
+  }
+}
 
   return (
   <>
@@ -378,8 +444,106 @@ const filteredOrders =
                     >
                       {getStatusLabel(order.status)}
                     </span>
+
+                                  <select
+                value={order.status || "PENDING"}
+                onChange={(e) =>
+                  handleUpdateStatus(order.id, e.target.value)
+                }
+                disabled={order.status === "COMPLETED"}
+                className="
+                  mt-2
+                  block
+                  w-full
+                  md:w-auto
+                  px-3
+                  py-2
+                  rounded-xl
+                  border
+                  border-border
+                  bg-surface
+                  text-sm
+                  text-text
+                  focus:outline-none
+                  focus:ring-2
+                  focus:ring-primary/20
+                  focus:border-primary
+                "
+              >
+                <option value="PENDING">Pendente</option>
+                <option value="PROCESSING">Processando</option>
+                <option value="SHIPPED">Enviado</option>
+                <option value="COMPLETED">Concluído</option>
+                <option value="CANCELLED">Cancelado</option>
+              </select>
                   </div>
                 </div>
+
+                              {/* LINHA DO TEMPO */}
+              {order.status !== "CANCELLED" && (
+                <div className="px-6 pt-6">
+                  <div className="flex items-center justify-between">
+
+                    {[1, 2, 3, 4].map((step) => {
+                      const currentStep = getStatusStep(order.status);
+                      const completed = step <= currentStep;
+
+                      return (
+                       <div key={step}
+                        className="flex flex-col items-center flex-1" >
+                          <div
+                            className={`
+                              relative z-10
+                              w-8 h-8
+                              rounded-full
+                              flex
+                              items-center
+                              justify-center
+                              text-sm
+                              font-bold
+                              transition-all
+                              ${
+                                completed
+                                  ? "bg-primary text-white"
+                                  : "bg-gray-200 text-gray-500"
+                              }
+                            `}
+                          >
+                            {step}
+                          </div>
+
+                          <p className="text-xs text-textLight text-center ml-2">
+                      {step === 1 && "Pendente"}
+                      {step === 2 && "Processando"}
+                      {step === 3 && "Enviado"}
+                      {step === 4 && "Concluído"}
+                    </p>
+
+                      {step < 4 && ( <div 
+                      className={` 
+                        absolute 
+                        top-4 
+                        left-1/2
+                        w-
+                        h-1 
+                        z-0
+                        rounded-full 
+                        transition-all
+                         ${ 
+                          step < currentStep
+                           ? "bg-primary" 
+                           : "bg-gray-200" 
+                           }
+                            `} 
+                            />
+                             )}
+                        </div>
+                      );
+                    })}
+
+                  </div>
+                </div>
+              )}
 
                 {/* PRODUTOS */}
                 <div className="p-6">
