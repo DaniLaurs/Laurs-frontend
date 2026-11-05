@@ -58,32 +58,34 @@ const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
-      const token = localStorage.getItem("token");
+  try {
+    setLoading(true);
 
-      const response = await fetch(
-`http://localhost:3333/admin/dashboard?period=${period}`,        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+    const token = localStorage.getItem("token");
 
-     const data = await response.json();
+    const response = await fetch(
+      `http://localhost:3333/admin/dashboard?period=${period}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
-      console.log("ADMIN DASHBOARD:", data);
+    const data = await response.json();
 
-      if (!response.ok) {
-  console.error(data);
-  return;
-}
+    console.log("ADMIN DASHBOARD:", data);
 
-      setStats(data.stats);
+    if (!response.ok) {
+      console.error(data);
+      return;
+    }
 
-     setGrowth(data.growth);
+    setStats(data.stats);
+    setGrowth(data.growth);
+    setIndicators(data.indicators);
 
-     setIndicators(data.indicators);
-
-       // BUSCAR USUÁRIOS
+    // BUSCAR USUÁRIOS
     const usersResponse = await fetch(
       "http://localhost:3333/admin/users",
       {
@@ -94,12 +96,21 @@ const [loading, setLoading] = useState(true);
     );
 
     const usersData = await usersResponse.json();
-console.log("USUÁRIOS RECEBIDOS:", usersData);
+
+    console.log("USUÁRIOS RECEBIDOS:", usersData);
+
+    if (!usersResponse.ok) {
+      console.error(usersData);
+      return;
+    }
 
     setUsers(usersData);
-
+  } catch (error) {
+    console.error("ERRO AO CARREGAR ADMIN:", error);
+  } finally {
     setLoading(false);
-  };
+  }
+};
 
 
     
@@ -110,36 +121,74 @@ console.log("USUÁRIOS RECEBIDOS:", usersData);
     
   }, [period]);
 
-  const makeAdmin = async (id: string) => {
+const makeAdmin = async (id: string) => {
   const token = localStorage.getItem("token");
 
-  await fetch(
-    `http://localhost:3333/admin/users/${id}/make-admin`,
-    {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+  try {
+    const response = await fetch(
+      `http://localhost:3333/admin/users/${id}/make-admin`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
-  window.location.reload();
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("ERRO AO TORNAR ADMIN:", data);
+      alert(data.error || "Erro ao tornar usuário Admin");
+      return;
+    }
+
+    setUsers((currentUsers) =>
+  currentUsers.map((user) =>
+    user.id === id
+      ? { ...user, role: "ADMIN" }
+      : user
+  )
+);
+  } catch (error) {
+    console.error("ERRO AO TORNAR ADMIN:", error);
+    alert("Erro ao conectar com o servidor");
+  }
 };
 
 const removeAdmin = async (id: string) => {
   const token = localStorage.getItem("token");
 
-  await fetch(
-    `http://localhost:3333/admin/users/${id}/remove-admin`,
-    {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+  try {
+    const response = await fetch(
+      `http://localhost:3333/admin/users/${id}/remove-admin`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
-  window.location.reload();
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("ERRO AO REMOVER ADMIN:", data);
+      alert(data.error || "Erro ao remover Admin");
+      return;
+    }
+
+    setUsers((currentUsers) =>
+  currentUsers.map((user) =>
+    user.id === id
+      ? { ...user, role: "USER" }
+      : user
+  )
+);
+  } catch (error) {
+    console.error("ERRO AO REMOVER ADMIN:", error);
+    alert("Erro ao conectar com o servidor");
+  }
 };
 
 const deleteUser = async (id: string) => {
@@ -149,20 +198,33 @@ const deleteUser = async (id: string) => {
     return;
   }
 
-  await fetch(
-    `http://localhost:3333/admin/users/${id}`,
-    {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+  try {
+    const response = await fetch(
+      `http://localhost:3333/admin/users/${id}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("ERRO AO EXCLUIR USUÁRIO:", data);
+      alert(data.error || "Erro ao excluir usuário");
+      return;
     }
-  );
 
-  window.location.reload();
+    setUsers((currentUsers) =>
+  currentUsers.filter((user) => user.id !== id)
+);
+  } catch (error) {
+    console.error("ERRO AO EXCLUIR USUÁRIO:", error);
+    alert("Erro ao conectar com o servidor");
+  }
 };
-
-
 
 
 

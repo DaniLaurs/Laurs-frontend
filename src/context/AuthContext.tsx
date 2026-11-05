@@ -9,11 +9,13 @@ interface User {
   name: string;
   email: string;
   createdAt: string;
+  role: "USER" | "ADMIN";
 }
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
+  login: (user: User, token: string) => void;
   logout: () => void;
 }
 
@@ -37,6 +39,15 @@ const [token, setToken] = useState<string | null>(() => {
   return localStorage.getItem("token");
 });
 
+
+function login(user: User, token: string) {
+  localStorage.setItem("user", JSON.stringify(user));
+  localStorage.setItem("token", token);
+
+  setUser(user);
+  setToken(token);
+}
+
   function logout() {
 
     localStorage.removeItem("user");
@@ -53,6 +64,7 @@ const [token, setToken] = useState<string | null>(() => {
       value={{
         user,
         token,
+        login,
         logout,
       }}
     >

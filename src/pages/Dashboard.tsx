@@ -86,6 +86,7 @@ function Dashboard() {
         const data = await response.json();
 
         console.log("🔥 DASHBOARD VENDEDOR:", data);
+        console.log("SLUG DA LOJA:", data.store?.slug);
 
         setDashboard(data);
       } catch (error) {
@@ -107,6 +108,8 @@ function Dashboard() {
         return "Pendente";
       case "PROCESSING":
         return "Processando";
+        case "SHIPPED":
+          return "Enviado";
       case "COMPLETED":
         return "Concluído";
       case "CANCELLED":
@@ -319,6 +322,8 @@ function Dashboard() {
 
         <div className="flex gap-4 mt-6 flex-wrap">
 
+       
+
           <Link
             to={`/store/${dashboard.store.slug}`}
             className="
@@ -336,7 +341,7 @@ function Dashboard() {
           >
             Ver Loja
           </Link>
-
+          
           <Link
             to="/dashboard/products"
             className="

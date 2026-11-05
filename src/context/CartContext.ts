@@ -1,6 +1,7 @@
 import { createContext } from "react";
 
 
+
 export interface CartItem {
   id: string;
   storeId: string;
@@ -8,13 +9,16 @@ export interface CartItem {
   price: number;
   image: string;
   quantity: number;
+  stock?: number;
 
   variant?: {
     id: string;
     color?: string;
     size?: string;
+    stock: number;
   };
 }
+
 
 
 interface CartContextType {

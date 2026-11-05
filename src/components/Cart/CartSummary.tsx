@@ -1,9 +1,11 @@
 import { useCart } from "../../context/useCart";
+import { useState } from "react";
 import Button from "../ui/Button";
 import { useNavigate } from "react-router-dom";
 
 export function CartSummary() {
   const { cartItems,  clearCart } = useCart();
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
 
   const navigate = useNavigate();
@@ -14,13 +16,23 @@ export function CartSummary() {
   );
 
   const handleCheckout = async () => {
+  if (isCheckingOut) return;
+
+  setIsCheckingOut(true);
+
   try {
     const token = localStorage.getItem("token");
 
     if (!token) {
       alert("Você precisa estar logado.");
+      setIsCheckingOut(false);
       return;
     }
+
+    console.log("ENVIANDO PEDIDO:", {
+  items: cartItems,
+  tokenExiste: !!token,
+});
 
     const response = await fetch(
       "http://localhost:3333/orders",
@@ -42,20 +54,20 @@ export function CartSummary() {
 
     if (!response.ok) {
       alert(data.error || "Erro ao finalizar compra.");
+      setIsCheckingOut(false);
       return;
     }
 
     clearCart();
 
     navigate("/dashboard/orders");
-
   } catch (error) {
     console.log("ERRO AO FINALIZAR:", error);
 
     alert("Erro ao finalizar compra.");
+    setIsCheckingOut(false);
   }
 };
-
   return (
         <div
         className="
@@ -107,21 +119,25 @@ export function CartSummary() {
           })}
         </span>
 
-      </div>
-
+        </div>
       <Button
-       onClick={handleCheckout}
-        className="
+        onClick={handleCheckout}
+        disabled={isCheckingOut}
+        className={`
           w-full
           mt-6
-          from-violet-600 to-purple-600
           text-white
           py-4
           rounded-xl
           font-bold
-        "
+          ${
+            isCheckingOut
+              ? "!bg-green-500 !hover:bg-green-500 cursor-default"
+              : "from-violet-600 to-purple-600"
+          }
+        `}
       >
-        Finalizar Compra
+        {isCheckingOut ? "✓ Pedido realizado" : "Finalizar Compra"}
       </Button>
 
     </div>

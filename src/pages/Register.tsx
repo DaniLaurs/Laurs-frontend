@@ -1,49 +1,62 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/logo/logo-laurs.png";
 
 function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  async function handleRegister() {
-    try {
-      const response = await fetch(
-        "http://localhost:3333/auth/register",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-
-          body: JSON.stringify({
-            name,
-            email,
-            password,
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      console.log(data);
-
-      alert("Conta criada com sucesso 😄🔥");
-    } catch (error) {
-      console.log(error);
-
-      alert("Erro ao criar conta");
-    }
+async function handleRegister() {
+ if (!name || !email || !password) {
+    alert("Preencha todos os campos.");
+    return;
   }
+
+  try {
+     setLoading(true);
+
+    const response = await fetch(
+      "http://localhost:3333/auth/register",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (response.ok) {
+      alert("Conta criada com sucesso 😄🔥");
+       navigate("/login")
+    } else {
+      alert(data.error || "Erro ao criar conta");
+    }
+  } catch {
+    alert("Erro ao criar conta");
+  }
+  finally {
+  setLoading(false);
+}
+}
 
   return (
     <section className="min-h-screen flex items-center justify-center bg-[#f5f7ff] px-6 relative overflow-hidden">
 
       {/* Glow */}
-      <div className="absolute w-[400px] h-[400px] bg-cyan-400 opacity-20 blur-3xl rounded-full top-[-100px] left-[-100px]"></div>
+      <div className="absolute w-[400px] h-[400px] bg-purple-400 opacity-20 blur-3xl rounded-full top-[-100px] left-[-100px]"></div>
 
-      <div className="absolute w-[300px] h-[300px] bg-blue-500 opacity-20 blur-3xl rounded-full bottom-[-100px] right-[-100px]"></div>
+      <div className="absolute w-[300px] h-[300px] bg-purple-500 opacity-20 blur-3xl rounded-full bottom-[-100px] right-[-100px]"></div>
 
       {/* Card */}
       <div className="w-full max-w-md bg-white/40 backdrop-blur-2xl border border-white/30 shadow-2xl rounded-3xl p-10 relative z-10">
@@ -64,7 +77,13 @@ function Register() {
         Comece sua loja na Laurs
       </p>
 
-        <form className="flex flex-col gap-5">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleRegister();
+          }}
+          className="flex flex-col gap-5"
+        >
 
           <input
             type="text"
@@ -91,11 +110,11 @@ function Register() {
           />
 
           <button
-            type="button"
-            onClick={handleRegister}
-            className="bg-gradient-to-r from-cyan-400 to-blue-600 text-white py-4 rounded-2xl font-semibold hover:scale-102 hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] transition duration-300"
+            type="submit"
+            disabled={loading}
+            className="bg-gradient-to-r  to-purple-200 bg-purple-600 text-white py-4 rounded-2xl font-semibold hover:scale-102 hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] transition duration-300"
           >
-            Criar conta
+            {loading ? "Criando..." : "Criar conta"}
           </button>
 
         </form>
@@ -105,7 +124,7 @@ function Register() {
           
           <Link
             to="/login"
-            className="text-blue-600 font-semibold"
+            className="text-purple-600 font-semibold"
           >
             Entrar
           </Link>

@@ -33,17 +33,34 @@ useEffect(() => {
 
 }, [cartItems]);
 
+
 function addToCart(item: CartItem) {
-  console.log("CHEGOU NO CART PROVIDER:", item);
-
   setCartItems((currentItems) => {
-    console.log("CARRINHO ATUAL:", currentItems);
-
     const existingItem = currentItems.find(
       (cartItem) =>
         cartItem.id === item.id &&
         cartItem.variant?.id === item.variant?.id
     );
+
+    const currentQuantity = existingItem
+      ? existingItem.quantity
+      : 0;
+
+    const newQuantity = currentQuantity + item.quantity;
+
+const availableStock = item.variant
+  ? item.variant.stock
+  : item.stock;
+
+    if (
+      availableStock !== undefined &&
+      newQuantity > availableStock
+    ) {
+     alert(
+      `Limite de estoque atingido!\n\nVocê já adicionou todas as unidades disponíveis deste produto ao carrinho.\n\nEstoque disponível: ${availableStock} unidade(s).`
+    );
+      return currentItems;
+    }
 
     if (existingItem) {
       return currentItems.map((cartItem) =>
@@ -51,7 +68,7 @@ function addToCart(item: CartItem) {
         cartItem.variant?.id === item.variant?.id
           ? {
               ...cartItem,
-              quantity: cartItem.quantity + item.quantity,
+              quantity: newQuantity,
             }
           : cartItem
       );
@@ -63,21 +80,40 @@ function addToCart(item: CartItem) {
 
 
 
+
+
 function increaseQuantity(item: CartItem) {
-
   setCartItems((currentItems) =>
-    currentItems.map((cartItem) =>
-      cartItem.id === item.id &&
-      cartItem.variant?.id === item.variant?.id
-        ? {
-            ...cartItem,
-            quantity: cartItem.quantity + 1,
-          }
-        : cartItem
-    )
-  );
+    currentItems.map((cartItem) => {
+      const isSameItem =
+        cartItem.id === item.id &&
+        cartItem.variant?.id === item.variant?.id;
 
+      if (!isSameItem) {
+        return cartItem;
+      }
+      
+      const availableStock = cartItem.variant
+        ? cartItem.variant.stock
+        : cartItem.stock;
+
+      if (
+        availableStock !== undefined &&
+        cartItem.quantity >= availableStock
+      ) {
+        alert(
+          `Limite de estoque atingido!\n\nVocê já adicionou todas as unidades disponíveis deste produto ao carrinho.\n\nEstoque disponível: ${availableStock} unidade(s).`
+        );
+        return cartItem;
+      }
+      return {
+        ...cartItem,
+        quantity: cartItem.quantity + 1,
+      };
+    })
+  );
 }
+
 
 function decreaseQuantity(item: CartItem) {
 

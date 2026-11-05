@@ -44,6 +44,21 @@ console.log("Banner File:", bannerFile);
 console.log("Logo URL:", logoUrl);
 console.log("Banner URL:", bannerUrl);
 
+
+  console.log("Dados da loja:", {
+  name,
+  description,
+  segment,
+  logo: logoUrl,
+  banner: bannerUrl,
+});
+
+if (!name.trim() || !description.trim() || !segment) {
+  alert("Preencha o nome, a descrição e o segmento da loja.");
+  return;
+}
+
+
     const response = await fetch("http://localhost:3333/stores", {
       method: "POST",
       headers: {
@@ -61,7 +76,11 @@ console.log("Banner URL:", bannerUrl);
 
     const data = await response.json();
 
-    console.log(data);
+    
+      if (!response.ok) {
+        alert(data.error || "Erro ao criar loja");
+        return;
+      }
 
     alert("Loja criada com sucesso!");
 
@@ -103,21 +122,20 @@ return (
         value={description}
         onChange={(e) => setDescription(e.target.value)}
       />
-
-          <Select
-        label="Segmento da Loja"
-        value={segment}
-        onChange={(e) => setSegment(e.target.value)}
-      >
-        {STORE_SEGMENTS.map((item) => (
-          <option
-            key={item.id}
-            value={item.id}
-          >
-            {item.label}
-          </option>
-        ))}
-      </Select>
+<Select
+  label="Segmento da Loja"
+  value={segment}
+  onChange={(e) => {
+    console.log("SEGMENTO SELECIONADO:", e.target.value);
+    setSegment(e.target.value);
+  }}
+>
+  {STORE_SEGMENTS.map((item) => (
+    <option key={item.id} value={item.id}>
+      {item.label}
+    </option>
+  ))}
+</Select>
 
       {/* LOGO */}
    {/* LOGO */}

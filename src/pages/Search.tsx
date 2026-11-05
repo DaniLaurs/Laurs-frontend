@@ -48,8 +48,8 @@ if (!query || !token) {
       try {
 
        const response = await fetch(
-          `http://localhost:3333/products?search=${encodeURIComponent(query)}`,
-          {
+`http://localhost:3333/products/search?search=${encodeURIComponent(query)}` ,  
+         {
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -61,7 +61,7 @@ if (!query || !token) {
 
         console.log("PRODUTOS SEARCH:", data);
 
-setProducts(Array.isArray(data) ? data : []);
+       setProducts(Array.isArray(data) ? data : []);
 
       } catch (error) {
 
@@ -135,7 +135,7 @@ setProducts(Array.isArray(data) ? data : []);
       ) : (
             <div
             className="
-                grids  
+                grid  
                 grid-cols-1
                 sm:grid-cols-2
                 lg:grid-cols-3

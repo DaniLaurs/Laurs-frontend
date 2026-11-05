@@ -1,3 +1,7 @@
+ import { Link } from "react-router-dom";
+
+
+
 function Benefits() {
   return (
     <section className="w-full py-32 px-6">
@@ -15,7 +19,11 @@ function Benefits() {
 
         <div className="grid grid-cols-3 gap-8 mt-20">
           
-          <div className="bg-white/20 backdrop-blur-2xl rounded-3xl p-10 border border-white/40 shadow-2xl cursor-pointer transform hover:-translate-y-6 hover:scale-110 hover:shadow-[0_20px_60px_rgba(59,130,246,0.35)] duration-500">
+
+          <Link
+              to="/dashboard/products"
+              className="bg-white/20 backdrop-blur-2xl rounded-3xl p-10 border border-white/40 shadow-2xl cursor-pointer transform hover:-translate-y-6 hover:scale-110 hover:shadow-[0_20px_60px_rgba(59,130,246,0.35)] duration-500 block"
+            >
             <div className="text-5xl mb-6">📦</div>
 
             <h3 className="text-2xl font-bold mb-4">
@@ -25,9 +33,12 @@ function Benefits() {
             <p className="text-gray-500">
               Gerencie sua loja de forma simples e organizada.
             </p>
-          </div>
+          </Link>
 
-          <div className="bg-white/20 backdrop-blur-2xl rounded-3xl p-10 border border-white/40 shadow-2xl cursor-pointer transform hover:-translate-y-6 hover:scale-110 hover:shadow-[0_20px_60px_rgba(59,130,246,0.35)] duration-500">
+          <Link
+              to="/dashboard"
+              className="bg-white/20 backdrop-blur-2xl rounded-3xl p-10 border border-white/40 shadow-2xl cursor-pointer transform hover:-translate-y-6 hover:scale-110 hover:shadow-[0_20px_60px_rgba(59,130,246,0.35)] duration-500 block"
+            >   
             <div className="text-5xl mb-6">📈</div>
 
             <h3 className="text-2xl font-bold mb-4">
@@ -37,9 +48,12 @@ function Benefits() {
             <p className="text-gray-500">
               Veja métricas importantes em tempo real.
             </p>
-          </div>
+          </Link>
 
-          <div className="bg-white/20 backdrop-blur-2xl rounded-3xl p-10 border border-white/40 shadow-2xl cursor-pointer transform hover:-translate-y-6 hover:scale-110 hover:shadow-[0_20px_60px_rgba(59,130,246,0.35)] duration-500">
+         <Link
+            to="/dashboard/orders"
+            className="bg-white/20 backdrop-blur-2xl rounded-3xl p-10 border border-white/40 shadow-2xl cursor-pointer transform hover:-translate-y-6 hover:scale-110 hover:shadow-[0_20px_60px_rgba(59,130,246,0.35)] duration-500 block"
+          >
             <div className="text-5xl mb-6">🛒</div>
 
             <h3 className="text-2xl font-bold mb-4">
@@ -49,7 +63,7 @@ function Benefits() {
             <p className="text-gray-500">
               Controle pedidos e acompanhe vendas facilmente.
             </p>
-          </div>
+          </Link>
 
         </div>
       </div>

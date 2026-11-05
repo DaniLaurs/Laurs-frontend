@@ -1,14 +1,25 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import logo from "../assets/logo/logo-laurs.png";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
 
   async function handleLogin() {
+     if (!email || !password) {
+      alert("Preencha o e-mail e a senha.");
+      return;
+    }
+
+
     try {
+          setLoading(true);
+
       const response = await fetch(
         "http://localhost:3333/auth/login",
         {
@@ -26,18 +37,8 @@ function Login() {
 
       const data = await response.json();
 
-      console.log(data);
         if (response.ok) {
-
-          localStorage.setItem(
-            "token",
-            data.token
-          );
-
-          localStorage.setItem(
-            "user",
-            JSON.stringify(data.user)
-          );
+           login(data.user, data.token);
 
           alert("Login realizado com sucesso 😄🔥");
 
@@ -46,20 +47,24 @@ function Login() {
         alert(data.error || "Erro no login");
       }
 
-    } catch (error) {
-      console.log(error);
+    } catch  {
+
 
       alert("Erro ao fazer login");
     }
-  }
+     finally {
+    setLoading(false);
+     }
+  } 
+  
 
   return (
     <section className="min-h-screen flex items-center justify-center bg-[#f5f7ff] px-6 relative overflow-hidden">
 
       {/* Glow */}
-      <div className="absolute w-[400px] h-[400px] bg-cyan-400 opacity-20 blur-3xl rounded-full top-[-100px] left-[-100px]"></div>
+      <div className="absolute w-[400px] h-[400px] bg-purple-400 opacity-20 blur-3xl rounded-full top-[-100px] left-[-100px]"></div>
 
-      <div className="absolute w-[300px] h-[300px] bg-blue-500 opacity-20 blur-3xl rounded-full bottom-[-100px] right-[-100px]"></div>
+      <div className="absolute w-[300px] h-[300px] bg-purple-500 opacity-20 blur-3xl rounded-full bottom-[-100px] right-[-100px]"></div>
 
       {/* Card */}
       <div className="w-full max-w-md bg-white/40 backdrop-blur-2xl border border-white/30 shadow-2xl rounded-3xl p-10 relative z-10">
@@ -80,7 +85,13 @@ function Login() {
           Acesse sua conta na Laurs
         </p>
 
-        <form className="flex flex-col gap-5">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleLogin();
+          }}
+          className="flex flex-col gap-5"
+        >
 
           <input
             type="email"
@@ -99,11 +110,12 @@ function Login() {
           />
 
           <button
-            type="button"
+            type="submit"
+            disabled= {loading}
             onClick={handleLogin}
-            className="bg-gradient-to-r from-cyan-400 to-blue-600 text-white py-4 rounded-2xl font-semibold hover:scale-102 hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] transition duration-300"
+            className="bg-gradient-to-r  to-purple-200 bg-purple-600 text-white py-4 rounded-2xl font-semibold hover:scale-102 hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] transition duration-300"
           >
-            Entrar
+            {loading ? "Entrando..." : "Entrar"}
           </button>
 
         </form>
@@ -113,7 +125,7 @@ function Login() {
 
           <Link
             to="/register"
-            className="text-blue-600 font-semibold"
+            className="text-purple-600 font-semibold"
           >
             Criar conta
           </Link>

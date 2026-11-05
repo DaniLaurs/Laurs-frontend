@@ -34,6 +34,8 @@ export default function EditProduct() {
     const loadProduct = async () => {
       const { data } = await api.get(`/products/${id}`);
 
+      console.log("VARIAÇÕES RECEBIDAS:", data.variants);
+
       setName(data.name);
       setDescription(data.description || "");
       setPrice(String(data.price || 0));
@@ -42,34 +44,48 @@ export default function EditProduct() {
 
       setExistingImages(data.images || []);
 
-      const mapped = (data.variants || []).map((v: any) => ({
-        color: v.color,
-        stockBySize: Object.fromEntries(
-          SIZES.map((s) => {
-            const sizeData = v.sizes?.find((x: any) => x.size === s);
-            return [s, sizeData ? sizeData.stock : 0];
-          })
-        ),
-      }));
 
-      setVariants(mapped);
-    };
+      const groupedVariants = (data.variants || []).reduce(
+        (acc: { color: string; stockBySize: Record<string, number> }[], v: any) => {
+          let group = acc.find((item) => item.color === v.color);
 
-    if (id) loadProduct();
+          if (!group) {
+            group = {
+              color: v.color,
+              stockBySize: {},
+            };
+
+            acc.push(group);
+          }
+
+          group.stockBySize[v.size] = v.stock;
+
+          return acc;
+        },
+        []
+      );
+
+      setVariants(groupedVariants);
+          };
+
+    loadProduct();
   }, [id]);
+
 
   // =======================
   // VARIANTS
   // =======================
+ 
   const addColor = () => {
     setVariants((prev) => [
       ...prev,
       {
         color: "",
-        stockBySize: Object.fromEntries(SIZES.map((s) => [s, 0])) as Record<string, number>,
+        stockBySize: {},
       },
     ]);
   };
+
 
   const removeColor = (index: number) => {
     setVariants((prev) => prev.filter((_, i) => i !== index));
@@ -99,50 +115,70 @@ export default function EditProduct() {
 
   // =======================
   // SAVE
-  // =======================
-  const handleSave = async () => {
-       const token = localStorage.getItem("token");
 
-       console.log("TOKEN:", token);
 
+      
+    const handleSave = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        alert("Sua sessão expirou. Faça login novamente.");
+        return;
+      }
+
+      
     const formattedVariants = variants.map((v) => ({
-      color: v.color,
+      color: v.color.trim(),
       sizes: Object.entries(v.stockBySize).map(([size, stock]) => ({
         size,
         stock: Number(stock),
       })),
     }));
 
+    const invalidVariant = formattedVariants.some(
+      (v) =>
+        !v.color ||
+        v.sizes.length === 0 ||
+        v.sizes.some(
+          (s) =>
+            !SIZES.includes(s.size) ||
+            !Number.isFinite(s.stock) ||
+            s.stock < 0
+        )
+    );
+
+    if (invalidVariant) {
+      alert(
+        "Confira as variações: cada cor precisa ter nome, pelo menos um tamanho e estoques válidos."
+      );
+      return;
+    }
 
 
-    const formData = new FormData();
 
-    formData.append("name", name);
-    formData.append("description", description);
-    formData.append("price", String(price));
-    formData.append("category", category);
-    formData.append("subcategory", subcategory);
-    formData.append("variants", JSON.stringify(formattedVariants));
+      const formData = new FormData();
 
-    newImages.forEach((img) => {
-      formData.append("images", img);
-    });
+      formData.append("name", name);
+      formData.append("description", description);
+      formData.append("price", String(price));
+      formData.append("category", category);
+      formData.append("subcategory", subcategory);
+      formData.append("variants", JSON.stringify(formattedVariants));
 
-    formData.append("removedImages", JSON.stringify(removedImages));
+      newImages.forEach((img) => {
+        formData.append("images", img);
+      });
 
-    await api.put(`/products/${id}`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+      formData.append("removedImages", JSON.stringify(removedImages));
 
-    
-  await api.put(`/products/${id}`, formData, {
-  headers: {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "multipart/form-data",
-  },
-});
-    navigate("/dashboard/products");
-  };
+      await api.put(`/products/${id}`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      navigate("/dashboard/products");
+      };
 
   // =======================
   // UI
@@ -205,11 +241,17 @@ export default function EditProduct() {
                   src={img.imageUrl}
                   className="h-28 w-full object-cover rounded-lg"
                 />
-
                 <button
-                  onClick={() =>
-                    setRemovedImages((prev) => [...prev, img.id])
-                  }
+                  type="button"
+                  onClick={() => {
+                    setRemovedImages((prev) =>
+                      prev.includes(img.id) ? prev : [...prev, img.id]
+                    );
+
+                    setExistingImages((prev) =>
+                      prev.filter((image) => image.id !== img.id)
+                    );
+                  }}
                   className="absolute top-1 right-1 bg-red-500 text-white text-xs px-2 py-1 rounded"
                 >
                   X
@@ -222,9 +264,14 @@ export default function EditProduct() {
           <input
             type="file"
             multiple
-            onChange={(e) =>
-              setNewImages(Array.from(e.target.files || []))
-            }
+            accept="image/*"
+            onChange={(e) => {
+              const selectedImages = Array.from(e.target.files || []);
+
+              setNewImages((prev) => [...prev, ...selectedImages]);
+
+              e.target.value = "";
+            }}
           />
 
           <div className="grid grid-cols-3 gap-3 mt-3">
@@ -260,8 +307,31 @@ export default function EditProduct() {
                 onChange={(e) => updateColor(i, e.target.value)}
               />
 
+                        
+          <div className="mb-3">
+            <p className="text-sm font-medium mb-2">
+              Adicionar tamanho
+            </p>
+
+            <div className="flex flex-wrap gap-2">
+              {SIZES.filter(
+                (size) => !(size in v.stockBySize)
+              ).map((size) => (
+                <button
+                  key={size}
+                  type="button"
+                  onClick={() => updateStock(i, size, 0)}
+                  className="border rounded px-3 py-1 hover:bg-purple-100"
+                >
+                  + {size}
+                </button>
+              ))}
+            </div>
+          </div>
+
+
               <div className="grid grid-cols-2 gap-3">
-                {SIZES.map((size) => (
+                {Object.keys(v.stockBySize).map((size) => (
                   <div key={size} className="flex justify-between">
                     <span>{size}</span>
 

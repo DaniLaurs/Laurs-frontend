@@ -12,7 +12,9 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Admin from "./pages/Admin";
 import CreateStore from "./pages/CreateStore";
 import Store from "./pages/Store";
+import EditStore from "./pages/EditStore";
 import EditProduct from "./pages/EditProduct"
+import CreateProduct from "./pages/CreateProduct";
 import MyStore from "./pages/MyStore";
 import ProductDetails from "./pages/ProductDetails";
 import { CartProvider } from "./context/CartProvider";
@@ -66,12 +68,15 @@ function App() {
       </Route>
 
 
-   
-    
+          
       <Route
-          path="/dashboard/admin"
-          element={<Admin />}
-        />
+        path="/dashboard/admin"
+        element={
+          <ProtectedRoute role="ADMIN">
+            <Admin />
+          </ProtectedRoute>
+        }
+       />
 
         <Route
           path="/dashboard/create-store"
@@ -91,6 +96,15 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+      <Route
+        path="/dashboard/products/new"
+        element={
+          <ProtectedRoute>
+            <CreateProduct />
+          </ProtectedRoute>
+        }
+      />
          <Route
           path="/dashboard/store"
           element={
@@ -99,6 +113,15 @@ function App() {
             </ProtectedRoute>
           }
 />
+
+        <Route
+          path="/dashboard/edit-store"
+          element={
+            <ProtectedRoute>
+              <EditStore />
+            </ProtectedRoute>
+          }
+        />
        <Route 
         path="/my-store" 
         element={<MyStore />} 

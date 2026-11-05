@@ -39,6 +39,8 @@ const cart = useContext(CartContext);
 
   function handleAddToCart() {
 
+     console.log("🟢 HANDLE ADD TO CART EXECUTOU!");
+
   addToCart({
     id,
     storeId,
@@ -158,6 +160,7 @@ const cart = useContext(CartContext);
         >
           Ver Produto
         </div>
+        
         <button
           onClick={(e) => {
             e.preventDefault();
