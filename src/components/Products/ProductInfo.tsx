@@ -57,6 +57,8 @@ console.log("VARIANTAS NO PRODUCT INFO:", product.variants);
 
 addToCart(item);
 
+     }
+
   return (
     <div>
 
@@ -225,4 +227,4 @@ addToCart(item);
     </div>
   );
      }
-    }
+    
