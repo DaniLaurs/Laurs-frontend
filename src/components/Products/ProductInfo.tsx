@@ -34,39 +34,28 @@ if ((product.variants?.length ?? 0) > 0 && !selectedVariant) {
 
 
 
-  const item = ({
-    id: product.id,
-    storeId: product.storeId,
-    name: product.name,
-    price: product.price,
-    image: product.images[0]?.imageUrl || "",
-    quantity,
-    
+const item = {
+  id: product.id,
+  storeId: product.storeId,
+  name: product.name,
+  price: product.price,
+  image: product.images[0]?.imageUrl || "",
+  quantity,
 
   variant: selectedVariant
     ? {
         id: selectedVariant.id,
         color: selectedVariant.color,
-        size: selectedVariant.size
+        size: selectedVariant.size,
+        stock: selectedVariant.stock
       }
     : undefined
+};
 
-    
-  });
-
-
-      console.log("ITEM ENVIADO:", item);
-
-    addToCart(item);
-
-     
-
-
-
-}
-
+console.log("ITEM ENVIADO:", item);
 console.log("VARIANTAS NO PRODUCT INFO:", product.variants);
 
+addToCart(item);
 
   return (
     <div>
@@ -235,4 +224,5 @@ console.log("VARIANTAS NO PRODUCT INFO:", product.variants);
 
     </div>
   );
-}
+     }
+    }
