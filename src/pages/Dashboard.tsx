@@ -10,6 +10,7 @@ import {
   Clock,
   ArrowRight,
 } from "lucide-react";
+import api from "../services/api";
 
 interface StoreData {
   id: string;
@@ -63,44 +64,31 @@ function Dashboard() {
 
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        const token = localStorage.getItem("token");
+useEffect(() => {
+  const fetchDashboard = async () => {
+    try {
+      const response = await api.get("/orders/seller-dashboard");
 
-        const response = await fetch(
-          "http://localhost:3333/orders/seller-dashboard",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+      const data = response.data;
 
-        if (!response.ok) {
-          throw new Error(
-            "Erro ao buscar dashboard do vendedor"
-          );
-        }
+      console.log("🔥 DASHBOARD VENDEDOR:", data);
+      console.log("SLUG DA LOJA:", data.store?.slug);
 
-        const data = await response.json();
+      setDashboard(data);
 
-        console.log("🔥 DASHBOARD VENDEDOR:", data);
-        console.log("SLUG DA LOJA:", data.store?.slug);
+    } catch (error) {
+      console.log(
+        "ERRO AO BUSCAR DASHBOARD:",
+        error
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        setDashboard(data);
-      } catch (error) {
-        console.log(
-          "ERRO AO BUSCAR DASHBOARD:",
-          error
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
+  fetchDashboard();
+}, []);
 
-    fetchDashboard();
-  }, []);
 
   function getStatusLabel(status: string) {
     switch (status) {

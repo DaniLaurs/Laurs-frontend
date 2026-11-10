@@ -6,6 +6,8 @@ import Textarea from "../components/ui/Textarea";
 import Select from "../components/ui/Select";
 import Button from "../components/ui/Button";
 import { PRODUCT_CATEGORIES } from "../constants/productCategories";
+import api from "../services/api";
+import axios from "axios";
 
 interface VariantSize {
   size: string;
@@ -155,59 +157,56 @@ function CreateProduct() {
     );
   };
 
-    const handleCreateProduct = async () => {
-    try {
-      const token = localStorage.getItem("token");
+    
+const handleCreateProduct = async () => {
+  try {
+    const token = localStorage.getItem("token");
 
-      if (!token) {
-        alert("Você precisa estar logado.");
-        return;
-      }
+    if (!token) {
+      alert("Você precisa estar logado.");
+      return;
+    }
 
-      const formData = new FormData();
+    const formData = new FormData();
 
-      formData.append("name", name);
-      formData.append("description", description);
-      formData.append("price", price);
-      formData.append("stock", stock);
-      formData.append("category", category);
-      formData.append("subcategory", subcategory);
+    formData.append("name", name);
+    formData.append("description", description);
+    formData.append("price", price);
+    formData.append("stock", stock);
+    formData.append("category", category);
+    formData.append("subcategory", subcategory);
 
-      formData.append(
-        "variants",
-        JSON.stringify(variants)
+    formData.append(
+      "variants",
+      JSON.stringify(variants)
+    );
+
+    images.forEach((image) => {
+      formData.append("images", image);
+    });
+
+    const response = await api.post("/products", formData);
+
+    const data = response.data;
+
+    alert(data.message || "Produto criado com sucesso!");
+
+    navigate("/dashboard/products");
+
+  } catch (error) {
+    console.error("ERRO AO CRIAR PRODUTO:", error);
+
+    if (axios.isAxiosError(error)) {
+      alert(
+        error.response?.data?.error ||
+        "Erro ao criar produto."
       );
-
-      images.forEach((image) => {
-        formData.append("images", image);
-      });
-
-      const response = await fetch(
-        "http://localhost:3333/products",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        alert(data.error || "Erro ao criar produto.");
-        return;
-      }
-
-      alert("Produto criado com sucesso!");
-
-      navigate("/dashboard/products");
-    } catch (error) {
-      console.error("ERRO AO CRIAR PRODUTO:", error);
+    } else {
       alert("Erro ao criar produto.");
     }
-  };
+  }
+};
+
 
   return (
     <div>

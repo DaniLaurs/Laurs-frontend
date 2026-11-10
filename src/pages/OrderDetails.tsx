@@ -7,6 +7,8 @@ import {
   Calendar,
   ShoppingBag,
 } from "lucide-react";
+import api from "../services/api"
+import axios from "axios";
 
 interface ProductImage {
   id: string;
@@ -99,33 +101,19 @@ function OrderDetails() {
   const [error, setError] = useState("");
 
   
+
 const updateOrderStatus = async (newStatus: string) => {
   if (!order) return;
 
   try {
-    const token = localStorage.getItem("token");
-
-    const response = await fetch(
-      `http://localhost:3333/orders/${order.id}/status`,
+    const response = await api.put(
+      `/orders/${order.id}/status`,
       {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          status: newStatus,
-        }),
+        status: newStatus,
       }
     );
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        data.error || "Erro ao atualizar status"
-      );
-    }
+    const data = response.data;
 
     setOrder((currentOrder) =>
       currentOrder
@@ -136,35 +124,33 @@ const updateOrderStatus = async (newStatus: string) => {
         : currentOrder
     );
   } catch (error) {
-    console.log(
-      "ERRO AO ATUALIZAR STATUS:",
-      error
-    );
+    console.log("ERRO AO ATUALIZAR STATUS:", error);
 
     alert(
-      error instanceof Error
-        ? error.message
-        : "Erro ao atualizar status"
+      axios.isAxiosError(error)
+        ? error.response?.data?.error || "Erro ao atualizar status"
+        : error instanceof Error
+          ? error.message
+          : "Erro ao atualizar status"
     );
   }
 };
+
 
 
 const getNextStatus = (status: string) => {
   switch (status) {
     case "PENDING":
       return "PROCESSING";
-
     case "PROCESSING":
       return "SHIPPED";
-
     case "SHIPPED":
       return "COMPLETED";
-
     default:
       return null;
   }
 };
+
 
 const cancelOrder = async () => {
   if (!order) return;
@@ -173,34 +159,17 @@ const cancelOrder = async () => {
     "Tem certeza que deseja cancelar este pedido?"
   );
 
-  if (!confirmed) {
-    return;
-  }
+  if (!confirmed) return;
 
   try {
-    const token = localStorage.getItem("token");
-
-    const response = await fetch(
-      `http://localhost:3333/orders/${order.id}/status`,
+    const response = await api.put(
+      `/orders/${order.id}/status`,
       {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          status: "CANCELLED",
-        }),
+        status: "CANCELLED",
       }
     );
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        data.error || "Erro ao cancelar pedido"
-      );
-    }
+    const data = response.data;
 
     setOrder((currentOrder) =>
       currentOrder
@@ -211,65 +180,48 @@ const cancelOrder = async () => {
         : currentOrder
     );
   } catch (error) {
-    console.log(
-      "ERRO AO CANCELAR PEDIDO:",
-      error
-    );
+    console.log("ERRO AO CANCELAR PEDIDO:", error);
 
     alert(
-      error instanceof Error
-        ? error.message
-        : "Erro ao cancelar pedido"
+      axios.isAxiosError(error)
+        ? error.response?.data?.error || "Erro ao cancelar pedido"
+        : error instanceof Error
+          ? error.message
+          : "Erro ao cancelar pedido"
     );
   }
 };
 
 
 
+useEffect(() => {
+  async function fetchOrder() {
+    try {
+      const response = await api.get(`/orders/${id}`);
 
+      const data = response.data;
 
+      setOrder(data);
+    } catch (error) {
+      console.log("ERRO AO BUSCAR PEDIDO:", error);
 
-
-  useEffect(() => {
-    async function fetchOrder() {
-      try {
-        const token = localStorage.getItem("token");
-
-        const response = await fetch(
-          `http://localhost:3333/orders/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(
-            data.error || "Erro ao buscar pedido"
-          );
-        }
-
-        setOrder(data);
-      } catch (error) {
-        console.log("ERRO AO BUSCAR PEDIDO:", error);
-
-        setError(
-          error instanceof Error
+      setError(
+        axios.isAxiosError(error)
+          ? error.response?.data?.error || "Erro ao buscar pedido"
+          : error instanceof Error
             ? error.message
             : "Erro ao buscar pedido"
-        );
-      } finally {
-        setLoading(false);
-      }
+      );
+    } finally {
+      setLoading(false);
     }
+  }
 
-    if (id) {
-      fetchOrder();
-    }
-  }, [id]);
+  if (id) {
+    fetchOrder();
+  }
+}, [id]);
+
 
   if (loading) {
     return (

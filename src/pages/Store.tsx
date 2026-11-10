@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import ProductCard from "../components/Products/ProductCard";
 import PageHeader from "../components/ui/PageHeader";
 import logoLaurs from "../assets/logo/logo-laurs.png";
+import api from "../services/api"
 
 interface ProductImage {
   id: string;
@@ -43,32 +44,17 @@ function Store() {
 
 
 
+
 useEffect(() => {
   const fetchStore = async () => {
     try {
       setLoading(true);
 
-      let url = "";
+      const response = isDashboard
+        ? await api.get("/stores/me")
+        : await api.get(`/stores/${slug}`);
 
-      if (isDashboard) {
-        url = "http://localhost:3333/stores/me";
-      } else {
-        url = `http://localhost:3333/stores/${slug}`;
-      }
-
-      const response = await fetch(url, {
-        headers: isDashboard
-          ? {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            }
-          : {},
-      });
-
-      if (!response.ok) {
-        throw new Error("Store not found");
-      }
-
-      const data = await response.json();
+      const data = response.data;
 
       console.log("DADOS COMPLETOS DA LOJA:", data);
       console.log("NOME:", data.name);
@@ -98,9 +84,9 @@ useEffect(() => {
   }
 }, [slug, isDashboard]);
 
+const storeUrl =
+  typeof window !== "undefined" ? window.location.href : "";
 
-  const storeUrl =
-    typeof window !== "undefined" ? window.location.href : "";
 
   const handleCopyLink = async () => {
     try {

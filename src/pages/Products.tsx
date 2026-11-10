@@ -5,6 +5,7 @@ import { useCart } from "../context/useCart";
 import PageHeader from "../components/ui/PageHeader";
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
+import api from "../services/api"
 
 /* =======================
    TYPES
@@ -56,29 +57,20 @@ export default function Products() {
      FETCH PRODUCTS
   ======================= */
 
-  async function fetchProducts(searchTerm = "") {
-    try {
-      const token = localStorage.getItem("token");
+async function fetchProducts(searchTerm = "") {
+  try {
+    const response = await api.get(
+      `/products?search=${encodeURIComponent(searchTerm)}`
+    );
 
-      const response = await fetch(
-        `http://localhost:3333/products?search=${encodeURIComponent(
-          searchTerm
-        )}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+    const data = response.data;
 
-      const data = await response.json();
-
-      setProducts(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.log(error);
-      setProducts([]);
-    }
+    setProducts(Array.isArray(data) ? data : []);
+  } catch (error) {
+    console.log("ERRO AO BUSCAR PRODUTOS:", error);
+    setProducts([]);
   }
+}
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -148,22 +140,20 @@ function handleAddToCart(product: Product) {
      DELETE PRODUCT
   ======================= */
 
-  async function handleDeleteProduct(id: string) {
-    try {
-      const token = localStorage.getItem("token");
+  
+async function handleDeleteProduct(id: string) {
+  try {
+    await api.delete(`/products/${id}`);
 
-      await fetch(`http://localhost:3333/products/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+    console.log("PRODUTO EXCLUÍDO:", id);
 
-      fetchProducts();
-    } catch (error) {
-      console.log(error);
-    }
+    fetchProducts();
+  } catch (error) {
+    console.log("ERRO AO EXCLUIR PRODUTO:", error);
+    alert("Não foi possível excluir o produto.");
   }
+}
+
 
   /* =======================
      RETURN

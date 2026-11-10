@@ -9,6 +9,7 @@ import Textarea from "../components/ui/Textarea";
 import FileUpload from "../components/ui/FileUpload";
 import { uploadToCloudinary } from "../utils/uploadToCloudinary";
 import { STORE_SEGMENTS } from "../constants/storeSegments";
+import api from "../services/api";
 
 interface StoreData {
   name: string;
@@ -34,30 +35,18 @@ function EditStore() {
   useEffect(() => {
     const fetchStore = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const response = await api.get("/stores/me");
+        const data: StoreData = response.data;
 
-        const response = await fetch("http://localhost:3333/stores/me", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        console.log("DADOS RECEBIDOS DA LOJA:", data);
 
-        if (!response.ok) {
-          throw new Error("Não foi possível carregar a loja.");
-        }
+        setName(data.name ?? "");
+        setDescription(data.description ?? "");
+        setSegment(data.segment ?? "");
+        setCurrentLogo(data.logo ?? null);
+        setCurrentBanner(data.banner ?? null);
 
-                const data: StoreData = await response.json();
-
-            console.log("DADOS RECEBIDOS DA LOJA:", data);
-
-            setName(data.name ?? "");
-            setDescription(data.description ?? "");
-            setSegment(data.segment ?? "");
-
-            console.log("SEGMENTO RECEBIDO:", data.segment);
-
-            setCurrentLogo(data.logo ?? null);
-            setCurrentBanner(data.banner ?? null);
+        console.log("SEGMENTO RECEBIDO:", data.segment);
       } catch (error) {
         console.error("Erro ao carregar loja:", error);
         alert("Não foi possível carregar os dados da loja.");
@@ -78,8 +67,6 @@ function EditStore() {
     try {
       setSaving(true);
 
-      const token = localStorage.getItem("token");
-
       let logoUrl = currentLogo;
       let bannerUrl = currentBanner;
 
@@ -91,24 +78,17 @@ function EditStore() {
         bannerUrl = await uploadToCloudinary(bannerFile);
       }
 
-      const response = await fetch("http://localhost:3333/stores", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: name.trim(),
-          description: description.trim(),
-          segment,
-          logo: logoUrl,
-          banner: bannerUrl,
-        }),
+      const response = await api.put("/stores", {
+        name: name.trim(),
+        description: description.trim(),
+        segment,
+        logo: logoUrl,
+        banner: bannerUrl,
       });
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (!response.ok) {
+      if (response.status !== 200) {
         alert(data.error || "Erro ao atualizar loja.");
         return;
       }
@@ -117,11 +97,16 @@ function EditStore() {
       navigate("/dashboard/store");
     } catch (error) {
       console.error("Erro ao atualizar loja:", error);
-      alert("Não foi possível atualizar a loja.");
+
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert("Não foi possível atualizar a loja.");
+      }
     } finally {
       setSaving(false);
     }
-  };
+  }; // FECHAMENTO DA FUNÇÃO handleUpdateStore
 
   if (loading) {
     return <div className="p-10">Carregando dados da loja...</div>;
@@ -151,29 +136,28 @@ function EditStore() {
             placeholder="Descreva sua loja"
           />
 
-        
-<Select
-        label="Segmento da Loja"
-        value={segment}
-        onChange={(e) => {
-            console.log("VALOR SELECIONADO:", e.target.value);
-            setSegment(e.target.value);
-        }}
-        >
-        <option value="">Selecione um segmento</option>
+          <Select
+            label="Segmento da Loja"
+            value={segment}
+            onChange={(e) => {
+              console.log("VALOR SELECIONADO:", e.target.value);
+              setSegment(e.target.value);
+            }}
+          >
+            <option value="">Selecione um segmento</option>
 
-        {STORE_SEGMENTS.map((item) => (
-            <option key={item.id} value={item.id}>
-            {item.label}
-            </option>
-        ))}
-        </Select>
+            {STORE_SEGMENTS.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.label}
+              </option>
+            ))}
+          </Select>
 
-    <p>Valor atual do segmento: {segment || "(vazio)"}</p>
-
+          <p>Valor atual do segmento: {segment || "(vazio)"}</p>
 
           <div>
             <p className="mb-2 font-medium">Logo atual</p>
+
             {currentLogo ? (
               <img
                 src={currentLogo}
@@ -195,6 +179,7 @@ function EditStore() {
 
           <div>
             <p className="mb-2 font-medium">Banner atual</p>
+
             {currentBanner ? (
               <img
                 src={currentBanner}
@@ -233,3 +218,4 @@ function EditStore() {
 }
 
 export default EditStore;
+
