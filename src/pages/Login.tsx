@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import logo from "../assets/logo/logo-laurs.png";
+import api from "../services/api";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -20,25 +21,16 @@ function Login() {
     try {
           setLoading(true);
 
-      const response = await fetch(
-        "http://localhost:3333/auth/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+        const response = await api.post("/auth/login", {
+          email,
+          password,
+        });
 
-          body: JSON.stringify({
-            email,
-            password,
-          }),
-        }
-      );
+        const data = response.data;
 
-      const data = await response.json();
+        if (response.status === 200) {
+            login(data.user, data.token);
 
-        if (response.ok) {
-           login(data.user, data.token);
 
           alert("Login realizado com sucesso 😄🔥");
 
@@ -112,7 +104,6 @@ function Login() {
           <button
             type="submit"
             disabled= {loading}
-            onClick={handleLogin}
             className="bg-gradient-to-r  to-purple-200 bg-purple-600 text-white py-4 rounded-2xl font-semibold hover:scale-102 hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] transition duration-300"
           >
             {loading ? "Entrando..." : "Entrar"}
