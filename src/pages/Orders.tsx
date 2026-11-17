@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import PageHeader from "../components/ui/PageHeader";
 import { CalendarDays, Clock, Package, Store, XCircle } from "lucide-react";
+import api from "../services/api"
 
 interface OrderItem {
   id: string;
@@ -40,26 +41,15 @@ function Orders() {
   const [loading, setLoading] = useState(true);
   const [cancelingId, setCancelingId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [cancellationReason, setCancellationReason] = useState("");
+const [requestingCancellationId, setRequestingCancellationId] = useState<string | null>(null);
 
 useEffect(() => {
   const loadOrders = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const response = await api.get("/orders");
 
-      const response = await fetch(
-        "http://localhost:3333/orders",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Erro ao buscar pedidos");
-      }
-
-      const data = await response.json();
+      const data = response.data;
 
       console.log("PEDIDOS RECEBIDOS:", data);
 
@@ -79,86 +69,27 @@ const filteredOrders =
     ? orders
     : orders.filter((order) => order.status === statusFilter);
 
- 
 
-  async function handleCancelOrder(orderId: string) {
-    const confirmed = window.confirm(
-      "Tem certeza que deseja cancelar este pedido?"
-    );
+  
+async function handleCancelOrder(orderId: string) {
+  const confirmed = window.confirm(
+    "Tem certeza que deseja cancelar este pedido?"
+  );
 
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      setCancelingId(orderId);
-
-      const token = localStorage.getItem("token");
-
-      const response = await fetch(
-        `http://localhost:3333/orders/${orderId}/cancel`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Erro ao cancelar pedido");
-      }
-
-      const updatedOrder = await response.json();
-
-      console.log("PEDIDO CANCELADO:", updatedOrder);
-
-      setOrders((currentOrders) =>
-        currentOrders.map((order) =>
-          order.id === orderId
-            ? {
-                ...order,
-                status: "CANCELLED",
-              }
-            : order
-        )
-      );
-    } catch (error) {
-      console.log("ERRO AO CANCELAR PEDIDO:", error);
-      alert("Não foi possível cancelar o pedido.");
-    } finally {
-      setCancelingId(null);
-    }
+  if (!confirmed) {
+    return;
   }
 
-  async function handleUpdateStatus(
-  orderId: string,
-  status: string
-) {
   try {
-    const token = localStorage.getItem("token");
+    setCancelingId(orderId);
 
-    const response = await fetch(
-      `http://localhost:3333/orders/${orderId}/status`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          status,
-        }),
-      }
+    const response = await api.put(
+      `/orders/${orderId}/cancel`
     );
 
-    if (!response.ok) {
-      throw new Error("Erro ao atualizar status");
-    }
+    const updatedOrder = response.data;
 
-    const updatedOrder = await response.json();
-
-    console.log("STATUS ATUALIZADO:", updatedOrder);
+    console.log("PEDIDO CANCELADO:", updatedOrder);
 
     setOrders((currentOrders) =>
       currentOrders.map((order) =>
@@ -171,10 +102,46 @@ const filteredOrders =
       )
     );
   } catch (error) {
-    console.log("ERRO AO ATUALIZAR STATUS:", error);
-    alert("Não foi possível atualizar o status do pedido.");
+    console.log("ERRO AO CANCELAR PEDIDO:", error);
+    alert("Não foi possível cancelar o pedido.");
+  } finally {
+    setCancelingId(null);
   }
 }
+
+
+async function handleRequestCancellation(orderId: string) {
+  if (!cancellationReason.trim()) {
+    alert("Informe o motivo do cancelamento.");
+    return;
+  }
+
+  try {
+    setRequestingCancellationId(orderId);
+
+    await api.put(`/orders/${orderId}/request-cancellation`, {
+      cancellationReason: cancellationReason.trim(),
+    });
+
+    setOrders((prev) =>
+      prev.map((order) =>
+        order.id === orderId
+          ? { ...order, status: "CANCELLATION_REQUESTED" }
+          : order
+      )
+    );
+
+    setCancellationReason("");
+
+    alert("Solicitação de cancelamento enviada com sucesso!");
+  } catch (error) {
+    console.error("Erro ao solicitar cancelamento:", error);
+    alert("Não foi possível solicitar o cancelamento.");
+  } finally {
+    setRequestingCancellationId(null);
+  }
+}
+
 
   function getStatusLabel(status?: string) {
     switch (status) {
@@ -445,37 +412,7 @@ const filteredOrders =
                       {getStatusLabel(order.status)}
                     </span>
 
-                                  <select
-                value={order.status || "PENDING"}
-                onChange={(e) =>
-                  handleUpdateStatus(order.id, e.target.value)
-                }
-                disabled={order.status === "COMPLETED"}
-                className="
-                  mt-2
-                  block
-                  w-full
-                  md:w-auto
-                  px-3
-                  py-2
-                  rounded-xl
-                  border
-                  border-border
-                  bg-surface
-                  text-sm
-                  text-text
-                  focus:outline-none
-                  focus:ring-2
-                  focus:ring-primary/20
-                  focus:border-primary
-                "
-              >
-                <option value="PENDING">Pendente</option>
-                <option value="PROCESSING">Processando</option>
-                <option value="SHIPPED">Enviado</option>
-                <option value="COMPLETED">Concluído</option>
-                <option value="CANCELLED">Cancelado</option>
-              </select>
+                                
                   </div>
                 </div>
 
@@ -653,8 +590,43 @@ const filteredOrders =
                           : "Cancelar pedido"}
                       </button>
                     </div>
+                 
                   )}
+
+                  {/* SOLICITAR CANCELAMENTO */}
+                  {order.status === "PROCESSING" && (
+                    <div className="mt-6 space-y-3">
+                      <textarea
+                        value={cancellationReason}
+                        onChange={(e) =>
+                          setCancellationReason(e.target.value)
+                        }
+                        placeholder="Informe o motivo do cancelamento..."
+                        rows={3}
+                        className="w-full rounded-xl border border-border bg-surface p-3 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      />
+
+                      <div className="flex justify-end">
+                        <button
+                          onClick={() =>
+                            handleRequestCancellation(order.id)
+                          }
+                          disabled={
+                            requestingCancellationId === order.id
+                          }
+                          className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
+                        >
+                          {requestingCancellationId === order.id
+                            ? "Enviando..."
+                            : "Solicitar cancelamento"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                 </div>
+
+                
               </div>
             ))}
           </div>

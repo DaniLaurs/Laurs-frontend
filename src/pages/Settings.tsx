@@ -8,6 +8,8 @@ import Input from "../components/ui/Input";
 import Textarea from "../components/ui/Textarea";
 import Select from "../components/ui/Select";
 import FileUpload from "../components/ui/FileUpload";
+import api from "../services/api";
+import axios from "axios";
 
 
 function Settings() {
@@ -26,104 +28,92 @@ function Settings() {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
 
-  useEffect(() => {
-    const fetchStore = async () => {
-      try {
-        const token = localStorage.getItem("token");
-
-        const response = await fetch("http://localhost:3333/stores/me", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          setHasStore(false);
-          setLoading(false);
-          return;
-        }
-
-        const data = await response.json();
-
-        console.log("Resposta do backend:", data);
-
-        if (!data || !data.slug) {
-          setHasStore(false);
-        } else {
-          setHasStore(true);
-
-          setName(data.name || "");
-          setDescription(data.description || "");
-          setSlug(data.slug || "");
-          setSegment(data.segment || "");
-
-          setLogo(data.logo || "");
-          setBanner(data.banner || "");
-        }
-
-      } catch (error) {
-        console.log(error);
-        setHasStore(false);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStore();
-  }, []);
-
-  const handleSave = async () => {
+useEffect(() => {
+  const fetchStore = async () => {
     try {
-
-      
-      
-
-
       const token = localStorage.getItem("token");
 
-      let logoUrl = logo;
-      let bannerUrl = banner;
-
- 
-
-      // ☁️ upload logo se mudou
-      if (logoFile) {
-        logoUrl = await uploadToCloudinary(logoFile);
-        console.log("Nova Logo URL:", logoUrl);
-      }
-
-      // ☁️ upload banner se mudou
-      if (bannerFile) {
-        bannerUrl = await uploadToCloudinary(bannerFile);
-          console.log("Novo Banner URL:", bannerUrl);
-      }
-      
-
-      const response = await fetch("http://localhost:3333/stores", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name,
-          description,
-          segment,
-          logo: logoUrl,
-          banner: bannerUrl,
-        }),
-      });
-
-      if (!response.ok) {
-        alert("Erro ao atualizar loja");
+      if (!token) {
+        setHasStore(false);
         return;
       }
 
-      alert("Loja atualizada com sucesso!");
+      const response = await api.get("/stores/me");
+
+      const data = response.data;
+
+      console.log("Resposta do backend:", data);
+
+      if (!data || !data.slug) {
+        setHasStore(false);
+      } else {
+        setHasStore(true);
+
+        setName(data.name || "");
+        setDescription(data.description || "");
+        setSlug(data.slug || "");
+        setSegment(data.segment || "");
+
+        setLogo(data.logo || "");
+        setBanner(data.banner || "");
+      }
     } catch (error) {
-      console.log(error);
+      console.log("ERRO AO BUSCAR LOJA:", error);
+      setHasStore(false);
+    } finally {
+      setLoading(false);
     }
   };
+
+  fetchStore();
+}, []);
+
+
+const handleSave = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Você precisa estar logado.");
+      return;
+    }
+
+    let logoUrl = logo;
+    let bannerUrl = banner;
+
+    // Upload da nova logo
+    if (logoFile) {
+      logoUrl = await uploadToCloudinary(logoFile);
+      console.log("Nova Logo URL:", logoUrl);
+    }
+
+    // Upload do novo banner
+    if (bannerFile) {
+      bannerUrl = await uploadToCloudinary(bannerFile);
+      console.log("Novo Banner URL:", bannerUrl);
+    }
+
+    const response = await api.put("/stores", {
+      name,
+      description,
+      segment,
+      logo: logoUrl,
+      banner: bannerUrl,
+    });
+
+    console.log("LOJA ATUALIZADA:", response.data);
+
+    alert("Loja atualizada com sucesso!");
+  } catch (error) {
+    console.log("ERRO AO ATUALIZAR LOJA:", error);
+
+    alert(
+      axios.isAxiosError(error)
+        ? error.response?.data?.error || "Erro ao atualizar loja."
+        : "Erro ao atualizar loja."
+    );
+  }
+};
 
  if (loading) {
   return (

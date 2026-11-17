@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/logo/logo-laurs.png";
+import api from "../services/api";
+import axios from "axios";
 
 function Register() {
   const [name, setName] = useState("");
@@ -10,45 +12,40 @@ function Register() {
   const navigate = useNavigate();
 
 async function handleRegister() {
- if (!name || !email || !password) {
+  if (!name || !email || !password) {
     alert("Preencha todos os campos.");
     return;
   }
 
   try {
-     setLoading(true);
+    setLoading(true);
 
-    const response = await fetch(
-      "http://localhost:3333/auth/register",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+    const response = await api.post("/auth/register", {
+      name,
+      email,
+      password,
+    });
 
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-        }),
-      }
+    const data = response.data;
+
+    console.log("USUÁRIO CADASTRADO:", data);
+
+    alert("Conta criada com sucesso 😄🔥");
+
+    navigate("/login");
+  } catch (error) {
+    console.log("ERRO AO CRIAR CONTA:", error);
+
+    alert(
+      axios.isAxiosError(error)
+        ? error.response?.data?.error || "Erro ao criar conta"
+        : "Erro ao criar conta"
     );
-
-    const data = await response.json();
-
-    if (response.ok) {
-      alert("Conta criada com sucesso 😄🔥");
-       navigate("/login")
-    } else {
-      alert(data.error || "Erro ao criar conta");
-    }
-  } catch {
-    alert("Erro ao criar conta");
+  } finally {
+    setLoading(false);
   }
-  finally {
-  setLoading(false);
 }
-}
+
 
   return (
     <section className="min-h-screen flex items-center justify-center bg-[#f5f7ff] px-6 relative overflow-hidden">

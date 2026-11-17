@@ -11,6 +11,7 @@ import { styled } from "styled-components";
 import PageBackground from "../components/Layout/PageBackground";
 import CreateStore1 from"../assets/CreateStore1.png";
 import FileUpload from "../components/ui/FileUpload";
+import api from "../services/api"
 
 function CreateStore() {
   const [name, setName] = useState("");
@@ -26,10 +27,14 @@ const handleCreateStore = async () => {
   try {
     const token = localStorage.getItem("token");
 
+    if (!token) {
+      alert("Você precisa estar logado.");
+      return;
+    }
+
     let logoUrl = null;
     let bannerUrl = null;
 
-    // 🔥 aqui está a mudança importante
     if (logoFile) {
       logoUrl = await uploadToCloudinary(logoFile);
     }
@@ -39,56 +44,42 @@ const handleCreateStore = async () => {
     }
 
     console.log("Logo File:", logoFile);
-console.log("Banner File:", bannerFile);
+    console.log("Banner File:", bannerFile);
+    console.log("Logo URL:", logoUrl);
+    console.log("Banner URL:", bannerUrl);
 
-console.log("Logo URL:", logoUrl);
-console.log("Banner URL:", bannerUrl);
-
-
-  console.log("Dados da loja:", {
-  name,
-  description,
-  segment,
-  logo: logoUrl,
-  banner: bannerUrl,
-});
-
-if (!name.trim() || !description.trim() || !segment) {
-  alert("Preencha o nome, a descrição e o segmento da loja.");
-  return;
-}
-
-
-    const response = await fetch("http://localhost:3333/stores", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        name,
-        description,
-        segment,
-        logo: logoUrl,
-        banner: bannerUrl,
-      }),
+    console.log("Dados da loja:", {
+      name,
+      description,
+      segment,
+      logo: logoUrl,
+      banner: bannerUrl,
     });
 
-    const data = await response.json();
+    if (!name.trim() || !description.trim() || !segment) {
+      alert("Preencha o nome, a descrição e o segmento da loja.");
+      return;
+    }
 
-    
-      if (!response.ok) {
-        alert(data.error || "Erro ao criar loja");
-        return;
-      }
+    const response = await api.post("/stores", {
+      name,
+      description,
+      segment,
+      logo: logoUrl,
+      banner: bannerUrl,
+    });
+
+    const data = response.data;
 
     alert("Loja criada com sucesso!");
 
     navigate(`/store/${data.slug}`);
   } catch (error) {
-    console.log(error);
+    console.log("ERRO AO CRIAR LOJA:", error);
+    alert("Erro ao criar loja.");
   }
 };
+
 
 
 return (

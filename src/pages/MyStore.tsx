@@ -1,40 +1,36 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "../services/api"
 
 function MyStore() {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const checkStore = async () => {
-      try {
-        const token = localStorage.getItem("token");
+ 
+useEffect(() => {
+  const checkStore = async () => {
+    try {
+      const token = localStorage.getItem("token");
 
-        const response = await fetch(
-          "http://localhost:3333/stores/me",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (response.ok) {
-          // usuário já possui loja
-          navigate("/dashboard/store");
-        } else {
-          // usuário ainda não criou loja
-          navigate("/dashboard/create-store");
-        }
-
-      } catch (error) {
-        console.log("Erro ao verificar loja:", error);
-        navigate("/dashboard/create-store");
+      if (!token) {
+        navigate("/login");
+        return;
       }
-    };
 
-    checkStore();
+      await api.get("/stores/me");
 
-  }, [navigate]);
+      // Usuário já possui loja
+      navigate("/dashboard/store");
+
+    } catch (error) {
+      console.log("Erro ao verificar loja:", error);
+
+      // Usuário ainda não criou loja
+      navigate("/dashboard/create-store");
+    }
+  };
+
+  checkStore();
+}, [navigate]);
 
 
   return (

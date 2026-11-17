@@ -5,6 +5,7 @@ import type { Product } from "../types/product";
 import { ProductInfo } from "../components/Products/ProductInfo";
 import PageHeader from "../components/ui/PageHeader";
 import logoLaursPeq from "../assets/logo/logo-laurspeq.png";
+import api from "../services/api"
 
 
 
@@ -18,39 +19,28 @@ function ProductDetails() {
 
 
 
-  useEffect(() => {
-    async function fetchProduct() {
-      try {
+useEffect(() => {
+  async function fetchProduct() {
+    try {
+      const response = await api.get(`/products/${id}`);
 
-        const response = await fetch(
-          `http://localhost:3333/products/${id}`
-        );
+      const data = response.data;
 
-        if (!response.ok) {
-          throw new Error("Produto não encontrado");
-        }
+      console.log("VARIANTAS DESSE PRODUTO:", data.variants);
 
-        const data = await response.json();
-console.log("VARIANTAS DESSE PRODUTO:", data.variants);        setProduct(data);
-    
-
-
-            } catch (error) {
-        console.error("Erro ao buscar produto:", error);
-        setProduct(null);
-
-      } finally {
-        setLoading(false);
-      }
+      setProduct(data);
+    } catch (error) {
+      console.error("Erro ao buscar produto:", error);
+      setProduct(null);
+    } finally {
+      setLoading(false);
     }
+  }
 
-
-    if (id) {
-      fetchProduct();
-    }
-
-  }, [id]);
-
+  if (id) {
+    fetchProduct();
+  }
+}, [id]);
 
 
   if (loading) {
