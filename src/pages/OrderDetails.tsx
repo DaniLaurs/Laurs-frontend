@@ -95,6 +95,8 @@ function getStatusClass(status: string) {
 
 function OrderDetails() {
   const { id } = useParams<{ id: string }>();
+  console.log("PÁGINA ORDER DETAILS ABRIU");
+console.log("ID DO PEDIDO:", id);
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -162,14 +164,14 @@ const cancelOrder = async () => {
   if (!confirmed) return;
 
   try {
-    const response = await api.put(
-      `/orders/${order.id}/status`,
-      {
-        status: "CANCELLED",
-      }
-    );
+   const response = await api.put(
+  `/orders/${order.id}/cancel`
+);
 
     const data = response.data;
+
+    console.log("STATUS DO PEDIDO:", data.status);
+console.log("PRÓXIMO STATUS:", getNextStatus(data.status));
 
     setOrder((currentOrder) =>
       currentOrder

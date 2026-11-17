@@ -72,6 +72,7 @@ useEffect(() => {
       const data = response.data;
 
       console.log("🔥 DASHBOARD VENDEDOR:", data);
+      console.log("PEDIDOS DO VENDEDOR:", data.recentOrders);
       console.log("SLUG DA LOJA:", data.store?.slug);
 
       setDashboard(data);

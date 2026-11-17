@@ -47,13 +47,13 @@ const [requestingCancellationId, setRequestingCancellationId] = useState<string 
 useEffect(() => {
   const loadOrders = async () => {
     try {
-      const response = await api.get("/orders");
+      const response = await api.get("/orders/seller-dashboard");
 
       const data = response.data;
 
-      console.log("PEDIDOS RECEBIDOS:", data);
+      console.log("PEDIDOS DO VENDEDOR:", data.recentOrders);
 
-      setOrders(data);
+      setOrders(data.recentOrders);
     } catch (error) {
       console.log("ERRO AO BUSCAR PEDIDOS:", error);
     } finally {
@@ -69,6 +69,17 @@ const filteredOrders =
     ? orders
     : orders.filter((order) => order.status === statusFilter);
 
+    useEffect(() => {
+  console.log(
+    "PEDIDOS FILTRADOS:",
+    filteredOrders.map((order) => ({
+      id: order.id,
+      status: order.status,
+      total: order.total,
+      createdAt: order.createdAt,
+    }))
+  );
+}, [filteredOrders]);
 
   
 async function handleCancelOrder(orderId: string) {
@@ -319,6 +330,7 @@ async function handleRequestCancellation(orderId: string) {
 
           {/* LISTA DE PEDIDOS */}
           <div className="space-y-6">
+            
             {filteredOrders.map((order) => (
               <div
                 key={order.id}
@@ -333,6 +345,10 @@ async function handleRequestCancellation(orderId: string) {
                   hover:shadow-md
                 "
               >
+
+    
+
+                
                 {/* CABEÇALHO DO PEDIDO */}
                 <div
                   className="
@@ -412,6 +428,26 @@ async function handleRequestCancellation(orderId: string) {
                       {getStatusLabel(order.status)}
                     </span>
 
+                    <button
+  type="button"
+  onClick={() => {
+    console.log("CLIQUE NO BOTÃO:", order.id);
+    window.location.href = `/dashboard/orders/${order.id}`;
+  }}
+    style={{
+  background: "#7C3AED",
+  color: "white",
+  padding: "8px 14px",
+  marginTop: "12px",
+  borderRadius: "8px",
+  fontSize: "13px",
+  fontWeight: "600",
+  cursor: "pointer",
+}}
+  
+>
+  Ver detalhes
+</button>
                                 
                   </div>
                 </div>
