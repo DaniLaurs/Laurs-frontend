@@ -47,13 +47,30 @@ const [requestingCancellationId, setRequestingCancellationId] = useState<string 
 useEffect(() => {
   const loadOrders = async () => {
     try {
-      const response = await api.get("/orders/seller-dashboard");
+      let response;
 
-      const data = response.data;
+      try {
+        // Primeiro tenta buscar os pedidos do vendedor
+        response = await api.get("/orders/seller-dashboard");
 
-      console.log("PEDIDOS DO VENDEDOR:", data.recentOrders);
+        const data = response.data;
 
-      setOrders(data.recentOrders);
+        console.log("PEDIDOS DO VENDEDOR:", data.recentOrders);
+
+        setOrders(data.recentOrders);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (error: any) {
+        // Se não tiver loja, busca os pedidos do comprador
+        if (error.response?.status === 404) {
+          response = await api.get("/orders");
+
+          console.log("PEDIDOS DO COMPRADOR:", response.data);
+
+          setOrders(response.data);
+        } else {
+          throw error;
+        }
+      }
     } catch (error) {
       console.log("ERRO AO BUSCAR PEDIDOS:", error);
     } finally {
